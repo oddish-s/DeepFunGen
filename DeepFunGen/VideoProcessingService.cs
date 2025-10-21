@@ -731,7 +731,10 @@ public sealed class VideoProcessingService : IDisposable
             BoostSlope = source.BoostSlope,
             MinSlope = source.MinSlope,
             MergeThresholdMs = source.MergeThresholdMs,
-            CentralDeviationThreshold = source.CentralDeviationThreshold
+            CentralDeviationThreshold = source.CentralDeviationThreshold,
+            FftDenoise = source.FftDenoise,
+            FftFramesPerComponent = source.FftFramesPerComponent,
+            FftWindowFrames = source.FftWindowFrames
         };
     }
 

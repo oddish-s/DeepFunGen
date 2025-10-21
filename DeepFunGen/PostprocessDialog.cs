@@ -13,6 +13,8 @@ public sealed class PostprocessDialog : Form
     private readonly NumericUpDown _minSlopeNumeric;
     private readonly NumericUpDown _mergeThresholdNumeric;
     private readonly NumericUpDown _centralDeviationNumeric;
+    private readonly CheckBox _fftDenoiseCheckBox;
+    private readonly NumericUpDown _fftFramesNumeric;
 
     public PostprocessOptions Options { get; private set; }
 
@@ -31,7 +33,7 @@ public sealed class PostprocessDialog : Form
         var layout = new TableLayoutPanel
         {
             ColumnCount = 2,
-            RowCount = 9,
+            RowCount = 11,
             Dock = DockStyle.Fill,
             AutoSize = true,
         };
@@ -46,6 +48,12 @@ public sealed class PostprocessDialog : Form
         _minSlopeNumeric = CreateFloatNumeric(0.0m, 100.0m, (decimal)Options.MinSlope, 2);
         _mergeThresholdNumeric = CreateFloatNumeric(0.0m, 1000.0m, (decimal)Options.MergeThresholdMs, 1, 5m);
         _centralDeviationNumeric = CreateFloatNumeric(0.0m, 1.0m, (decimal)Options.CentralDeviationThreshold, 3, 0.01m);
+        _fftDenoiseCheckBox = new CheckBox
+        {
+            Checked = Options.FftDenoise,
+            AutoSize = true,
+        };
+        _fftFramesNumeric = CreateIntNumeric(4, 400, Options.FftFramesPerComponent);
 
         AddRow(layout, "Smooth Window Frames", _smoothWindowNumeric);
         AddRow(layout, "Prominence Ratio", _prominenceRatioNumeric);
@@ -55,6 +63,8 @@ public sealed class PostprocessDialog : Form
         AddRow(layout, "Min Slope", _minSlopeNumeric);
         AddRow(layout, "Merge Threshold (ms)", _mergeThresholdNumeric);
         AddRow(layout, "Central Deviation Threshold", _centralDeviationNumeric);
+        AddRow(layout, "FFT Denoise", _fftDenoiseCheckBox);
+        AddRow(layout, "FFT Frames / Component", _fftFramesNumeric);
 
         var buttonPanel = new FlowLayoutPanel
         {
@@ -74,7 +84,7 @@ public sealed class PostprocessDialog : Form
 
         buttonPanel.Controls.Add(saveButton);
 
-        layout.Controls.Add(buttonPanel, 0, 8);
+        layout.Controls.Add(buttonPanel, 0, 10);
         layout.SetColumnSpan(buttonPanel, 2);
 
         Controls.Add(layout);
@@ -122,6 +132,7 @@ public sealed class PostprocessDialog : Form
 
     private void OnSave()
     {
+        var previous = Options ?? PostprocessOptions.Default;
         Options = new PostprocessOptions
         {
             SmoothWindowFrames = (int)_smoothWindowNumeric.Value,
@@ -132,6 +143,9 @@ public sealed class PostprocessDialog : Form
             MinSlope = (double)_minSlopeNumeric.Value,
             MergeThresholdMs = (double)_mergeThresholdNumeric.Value,
             CentralDeviationThreshold = (double)_centralDeviationNumeric.Value,
+            FftDenoise = _fftDenoiseCheckBox.Checked,
+            FftFramesPerComponent = (int)_fftFramesNumeric.Value,
+            FftWindowFrames = previous.FftWindowFrames,
         };
 
         DialogResult = DialogResult.OK;

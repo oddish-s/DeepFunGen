@@ -3,6 +3,8 @@ namespace app;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using MathNet.Numerics.IntegralTransforms;
 
 public sealed class PostProcessor
 {
@@ -18,26 +20,41 @@ public sealed class PostProcessor
         }
 
         frameRate = frameRate > 0 ? frameRate : 30.0;
-        double[] changeD = new double[n];
+        double[] rawValues = new double[n];
         for (int i = 0; i < n; i++)
         {
-            changeD[i] = change[i];
+            rawValues[i] = change[i];
         }
 
-        int smoothWindow = Math.Max(1, options.SmoothWindowFrames);
-        double[] smoothed = Smooth(changeD, smoothWindow);
+        double[] processed = (double[])rawValues.Clone();
+        double[] denoised = Array.Empty<double>();
 
-        var rawExtrema = DetectExtrema(smoothed, changeD, options);
+        if (options.FftDenoise)
+        {
+            processed = ApplyFftDenoise(processed, options.FftFramesPerComponent, options.FftWindowFrames);
+            denoised = (double[])processed.Clone();
+        }
+
+        double[] delayProfile = Array.Empty<double>();
+        DelayMarkerInfo[] delayMarkers = Array.Empty<DelayMarkerInfo>();
+        double averageDelayFrames = 0.0;
+
+        int delayFrames = (int)Math.Round(averageDelayFrames);
+
+        int smoothWindow = Math.Max(1, options.SmoothWindowFrames);
+        double[] smoothed = Smooth(processed, smoothWindow);
+
+        var rawExtrema = DetectExtrema(smoothed, rawValues, processed, options);
         if (rawExtrema.Count == 0)
         {
             return PostprocessResult.Fallback(n, options);
         }
 
-        var stageTwo = InsertMissingExtrema(rawExtrema, n, changeD);
+        var stageTwo = InsertMissingExtrema(rawExtrema, n, rawValues, processed);
         int mergeFrames = MsToFrames(options.MergeThresholdMs, frameRate);
         if (mergeFrames > 0)
         {
-            stageTwo = MergeTriplets(stageTwo, mergeFrames, changeD);
+            stageTwo = MergeTriplets(stageTwo, mergeFrames, rawValues, processed);
         }
         stageTwo = SortExtrema(stageTwo);
         if (stageTwo.Count < 2)
@@ -96,16 +113,20 @@ public sealed class PostProcessor
         var graphInfos = graphPoints.Select(g => new GraphPointInfo(g.Position, g.Value, g.Label, g.Origin, g.Direction)).ToArray();
 
         return new PostprocessResult(
-            changeD,
+            rawValues,
             smoothed,
+            denoised,
             rawInfos,
             stageInfos,
             graphInfos,
+            delayMarkers,
+            delayProfile,
             processedValue,
             processedChange,
             phaseMarker,
             phaseSource,
             rawMarker,
+            delayFrames,
             options
         );
     }
@@ -136,7 +157,7 @@ public sealed class PostProcessor
         return result;
     }
 
-    private static List<Extremum> DetectExtrema(double[] smoothed, double[] raw, PostprocessOptions options)
+    private static List<Extremum> DetectExtrema(double[] smoothed, double[] raw, double[] processed, PostprocessOptions options)
     {
         var results = new List<Extremum>();
         int windowSize = 300;
@@ -181,8 +202,8 @@ public sealed class PostProcessor
             (int[] peaks, PeakProperties[] peakProps) troughResult;
             if (threshold > 0)
             {
-                peakResult = FindPeaks.Find(extended, prominence: (threshold, null), width: (5.0, null));
-                troughResult = FindPeaks.Find(extendedInverted, prominence: (threshold, null), width: (5.0, null));
+                peakResult = FindPeaks.Find(extended, prominence: (threshold, null), width: (1.0, null));
+                troughResult = FindPeaks.Find(extendedInverted, prominence: (threshold, null), width: (1.0, null));
             }
             else
             {
@@ -198,14 +219,18 @@ public sealed class PostProcessor
                     continue;
                 }
 
+                double width = Math.Max(0.0, peakResult.peakProps[i].Width);
+
                 results.Add(new Extremum(
                     global,
                     "peak",
                     raw[global],
+                    processed[(uint)global < (uint)processed.Length ? global : processed.Length - 1],
                     peakResult.peakProps[i].Prominence,
                     windowMin,
                     windowMax,
-                    "original"
+                    "original",
+                    width
                 ));
             }
 
@@ -217,14 +242,18 @@ public sealed class PostProcessor
                     continue;
                 }
 
+                double width = Math.Max(0.0, troughResult.peakProps[i].Width);
+
                 results.Add(new Extremum(
                     global,
                     "trough",
                     raw[global],
+                    processed[(uint)global < (uint)processed.Length ? global : processed.Length - 1],
                     troughResult.peakProps[i].Prominence,
                     windowMin,
                     windowMax,
-                    "original"
+                    "original",
+                    width
                 ));
             }
         }
@@ -242,7 +271,7 @@ public sealed class PostProcessor
     }
 
 
-    private static List<Extremum> InsertMissingExtrema(IReadOnlyList<Extremum> extrema, int totalFrames, double[] change)
+    private static List<Extremum> InsertMissingExtrema(IReadOnlyList<Extremum> extrema, int totalFrames, double[] rawChange, double[] processedChange)
     {
         if (extrema.Count == 0)
         {
@@ -265,21 +294,36 @@ public sealed class PostProcessor
                 int mid = currentFrame == nextFrame ? currentFrame : (currentFrame + nextFrame) / 2;
                 mid = Math.Clamp(mid, 0, totalFrames - 1);
                 string opposite = current.Kind == "trough" ? "peak" : "trough";
+                double estimatedWidth = 0.0;
+                if (current.Width > 0.0 && next.Width > 0.0)
+                {
+                    estimatedWidth = (current.Width + next.Width) * 0.5;
+                }
+                else
+                {
+                    estimatedWidth = Math.Max(current.Width, next.Width);
+                }
+                if (estimatedWidth <= 0.0)
+                {
+                    estimatedWidth = 1.0;
+                }
                 result.Add(new Extremum(
                     mid,
                     opposite,
-                    change[mid],
+                    rawChange[mid],
+                    processedChange[mid],
                     0.0,
-                    change[mid],
-                    change[mid],
-                    "inserted"
+                    rawChange[mid],
+                    rawChange[mid],
+                    "inserted",
+                    estimatedWidth
                 ));
             }
         }
         return SortExtrema(result);
     }
 
-    private static List<Extremum> MergeTriplets(IReadOnlyList<Extremum> extrema, int thresholdFrames, double[] change)
+    private static List<Extremum> MergeTriplets(IReadOnlyList<Extremum> extrema, int thresholdFrames, double[] rawChange, double[] processedChange)
     {
         if (extrema.Count < 3)
         {
@@ -296,15 +340,17 @@ public sealed class PostProcessor
                 var c = extrema[i + 2];
                 if (a.Kind == c.Kind && a.Kind != b.Kind && (c.Frame - a.Frame) <= thresholdFrames)
                 {
-                    int midFrame = (int)Math.Clamp(Math.Round((a.Frame + c.Frame) / 2.0), 0, change.Length - 1);
+                    int midFrame = (int)Math.Clamp(Math.Round((a.Frame + c.Frame) / 2.0), 0, rawChange.Length - 1);
                     merged.Add(new Extremum(
                         midFrame,
                         a.Kind,
-                        change[midFrame],
+                        rawChange[midFrame],
+                        processedChange[midFrame],
                         Math.Max(a.Prominence, c.Prominence),
                         Math.Min(a.WindowMin, c.WindowMin),
                         Math.Max(a.WindowMax, c.WindowMax),
-                        "merged"
+                        "merged",
+                        Math.Max(a.Width, c.Width)
                     ));
                     i += 3;
                     continue;
@@ -340,18 +386,41 @@ public sealed class PostProcessor
         double currentY = MakeTargetY(current);
         graph.Add(new GraphPoint(currentX, currentY, current.Kind, current.Origin));
 
+        const double offsetDecay = 0.82;
+        const double offsetClamp = 15.0;
+        double currentOffset = 0.0;
+
         int i = 1;
         while (i < extrema.Count)
         {
             var target = extrema[i];
-            double targetX = target.Frame;
             double targetY = MakeTargetY(target);
+
+            double baseDx = target.Frame - currentX;
+            double baseDy = targetY - currentY;
+            double baseSlope = baseDx > 1e-9 ? Math.Abs(baseDy) / baseDx : double.PositiveInfinity;
+            double desiredOffset = ComputeSlopeOffset(baseSlope);
+
+            currentOffset = currentOffset * offsetDecay + desiredOffset * (1.0 - offsetDecay);
+            currentOffset = Math.Clamp(currentOffset, 0.0, offsetClamp);
+
+            double candidateX = target.Frame + currentOffset;
+            if (i + 1 < extrema.Count)
+            {
+                double nextFrame = extrema[i + 1].Frame;
+                candidateX = Math.Min(candidateX, nextFrame - 0.5);
+            }
+            candidateX = Math.Max(candidateX, target.Frame);
+            candidateX = Math.Max(candidateX, currentX + 1e-4);
+
+            double targetX = candidateX;
             double dx = targetX - currentX;
             if (dx <= 0)
             {
                 i++;
                 continue;
             }
+
             double dy = targetY - currentY;
             double actualSlope = Math.Abs(dy) / dx;
             string direction = dy > 0 ? "to_peak" : "to_trough";
@@ -385,6 +454,33 @@ public sealed class PostProcessor
         }
 
         return graph;
+    }
+
+    private static double ComputeSlopeOffset(double slope)
+    {
+        if (!double.IsFinite(slope))
+        {
+            slope = 100.0;
+        }
+
+        const double minOffset = 1.0;
+        const double maxOffset = 15.0;
+        const double gentleSlope = 2.0;
+        const double steepSlope = 12.0;
+
+        if (slope <= gentleSlope)
+        {
+            return maxOffset;
+        }
+
+        if (slope >= steepSlope)
+        {
+            return minOffset;
+        }
+
+        double normalized = (slope - gentleSlope) / (steepSlope - gentleSlope);
+        double offset = maxOffset - normalized * (maxOffset - minOffset);
+        return Math.Clamp(offset, minOffset, maxOffset);
     }
 
     private static double MakeTargetY(Extremum extremum)
@@ -691,7 +787,74 @@ public sealed class PostProcessor
 
     private static double Clamp(double value, double min, double max) => value < min ? min : value > max ? max : value;
 
-    private readonly record struct Extremum(double Frame, string Kind, double RawChange, double Prominence, double WindowMin, double WindowMax, string Origin);
+    private static double[] ApplyFftDenoise(double[] signal, int framesPerComponent, int? windowFrames)
+    {
+        int length = signal.Length;
+        if (length == 0)
+        {
+            return Array.Empty<double>();
+        }
+
+        framesPerComponent = Math.Max(1, framesPerComponent);
+        int? window = windowFrames.HasValue && windowFrames.Value > 0 ? windowFrames.Value : null;
+        if (window is null || window.Value >= length)
+        {
+            return FilterSegment(signal, framesPerComponent);
+        }
+
+        int win = Math.Min(Math.Max(1, window.Value), length);
+        double[] output = new double[length];
+        int start = 0;
+        while (start < length)
+        {
+            int segmentLength = Math.Min(win, length - start);
+            double[] segment = new double[segmentLength];
+            Array.Copy(signal, start, segment, 0, segmentLength);
+            double[] filtered = FilterSegment(segment, framesPerComponent);
+            Array.Copy(filtered, 0, output, start, segmentLength);
+            start += segmentLength;
+        }
+        return output;
+
+        static double[] FilterSegment(double[] segment, int framesPerComponent)
+        {
+            int len = segment.Length;
+            if (len == 0)
+            {
+                return Array.Empty<double>();
+            }
+
+            int keep = Math.Max(1, len / framesPerComponent);
+            if (keep * 2 >= len)
+            {
+                return (double[])segment.Clone();
+            }
+
+            var spectrum = new Complex[len];
+            for (int i = 0; i < len; i++)
+            {
+                spectrum[i] = new Complex(segment[i], 0.0);
+            }
+
+            Fourier.Forward(spectrum, FourierOptions.Matlab);
+            int upper = len - keep;
+            for (int i = keep; i < upper; i++)
+            {
+                spectrum[i] = Complex.Zero;
+            }
+            Fourier.Inverse(spectrum, FourierOptions.Matlab);
+
+            double[] filtered = new double[len];
+            for (int i = 0; i < len; i++)
+            {
+                filtered[i] = spectrum[i].Real;
+            }
+            return filtered;
+        }
+    }
+
+
+    private readonly record struct Extremum(double Frame, string Kind, double RawChange, double ProcessedChange, double Prominence, double WindowMin, double WindowMax, string Origin, double Width);
 
     private readonly record struct GraphPoint(double Position, double Value, string Label, string Origin, string? Direction = null);
 }
@@ -700,17 +863,23 @@ public readonly record struct ExtremumInfo(double Frame, string Kind, string Ori
 
 public readonly record struct GraphPointInfo(double Position, double Value, string Label, string Origin, string? Direction);
 
+public readonly record struct DelayMarkerInfo(double Frame, double Delay);
+
 public sealed record PostprocessResult(
     double[] RawSignal,
     double[] SmoothedSignal,
+    double[] DenoisedSignal,
     IReadOnlyList<ExtremumInfo> RawExtrema,
     IReadOnlyList<ExtremumInfo> StageTwoExtrema,
     IReadOnlyList<GraphPointInfo> GraphPoints,
+    IReadOnlyList<DelayMarkerInfo> TemporalDelayMarkers,
+    double[] TemporalDelayProfile,
     double[] ProcessedValue,
     double[] ProcessedChange,
     double[] PhaseMarker,
     string[] PhaseSource,
     double[] RawExtremaMarker,
+    int TemporalShiftFrames,
     PostprocessOptions Options)
 {
     public static PostprocessResult Fallback(int length, PostprocessOptions options)
@@ -723,14 +892,18 @@ public sealed record PostprocessResult(
         return new PostprocessResult(
             Array.Empty<double>(),
             Array.Empty<double>(),
+            Array.Empty<double>(),
             Array.Empty<ExtremumInfo>(),
             Array.Empty<ExtremumInfo>(),
             Array.Empty<GraphPointInfo>(),
+            Array.Empty<DelayMarkerInfo>(),
+            Array.Empty<double>(),
             processedValue,
             processedChange,
             phaseMarker,
             phaseSource,
             rawMarker,
+            0,
             options
         );
     }

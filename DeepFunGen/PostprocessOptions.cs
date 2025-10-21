@@ -1,4 +1,4 @@
-﻿namespace app;
+namespace app;
 
 using System.IO;
 using System.Text.Json;
@@ -10,7 +10,7 @@ public class PostprocessOptions
     public int SmoothWindowFrames { get; set; } = 3;
 
     [JsonPropertyName("prominence_ratio")]
-    public double ProminenceRatio { get; set; } = 0.001;
+    public double ProminenceRatio { get; set; } = 0.1;
 
     [JsonPropertyName("min_prominence")]
     public double MinProminence { get; set; } = 0.0;
@@ -30,6 +30,14 @@ public class PostprocessOptions
     [JsonPropertyName("central_deviation_threshold")]
     public double CentralDeviationThreshold { get; set; } = 0.03;
 
+    [JsonPropertyName("fft_denoise")]
+    public bool FftDenoise { get; set; } = true;
+
+    [JsonPropertyName("fft_frames_per_component")]
+    public int FftFramesPerComponent { get; set; } = 10;
+
+    [JsonPropertyName("fft_window_frames")]
+    public int? FftWindowFrames { get; set; }
 
     public static PostprocessOptions Default => new();
 
@@ -59,8 +67,10 @@ public class PostprocessOptions
     }
 
     public override string ToString() =>
-        $"smooth={SmoothWindowFrames}, prominence_ratio={ProminenceRatio}, min_prominence={MinProminence}, max_slope={MaxSlope}, boost_slope={BoostSlope}, min_slope={MinSlope}, merge_threshold_ms={MergeThresholdMs}, central_deviation_threshold={CentralDeviationThreshold}";
+        $"smooth={SmoothWindowFrames}, prominence_ratio={ProminenceRatio}, min_prominence={MinProminence}, max_slope={MaxSlope}, boost_slope={BoostSlope}, min_slope={MinSlope}, merge_threshold_ms={MergeThresholdMs}, central_deviation_threshold={CentralDeviationThreshold}, fft_denoise={FftDenoise}, fft_frames_per_component={FftFramesPerComponent}, fft_window_frames={(FftWindowFrames?.ToString() ?? "auto")}";
 }
+
+
 
 
 
