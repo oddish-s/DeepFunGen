@@ -1,5 +1,39 @@
 # DeepFunGen Quick Start
 
+**DeepFunGen** is a Windows-based Python application that uses ONNX-format inference models to enqueue videos for background inference and post-processing.  
+Follow the steps below to quickly set it up, run it, and view your results.
+
+## Requirements
+- Windows 10 or 11  
+- [uv](https://github.com/astral-sh/uv)  
+- One or more ONNX models inside the `models/` folder (the default model `conv_tcn_56.onnx` is included)
+
+## How to Run
+1. Run `run.bat`.  
+   This will automatically install dependencies via **uv** and start the application.
+2. **Add Files Screen**
+   - By default, the model `models/conv_tcn_56.onnx` is selected at startup.  
+     To switch to another model, choose a different ONNX file from the dropdown menu on the right.
+   - Drag and drop your video files (e.g., `.mp4`) or click **Browse Files** to add them.
+   - Adjust the options as needed, then click **Add to Queue** to enqueue the video for processing.
+3. **Queue Screen**
+   - Monitor processing progress here.
+   - When inference is complete, prediction results are saved as `<video_name>.<model_name>.csv`, and a `<video_name>.funscript` file is generated in the same folder.
+   - If you re-add a previously processed video, the saved CSV file will be reused to save reprocessing time.
+   - Select an item in the queue and click **Open Viewer** to launch the Viewer and visualize the step-by-step graphs.
+
+## Model Management & Acceleration
+- Any ONNX models placed in the `models/` folder will automatically appear in the dropdown list.
+- If your GPU supports **DirectML (DirectX 12)**, hardware acceleration will be enabled automatically; otherwise, the app will fall back to CPU execution.  
+  You can check the current execution provider in the **Provider** section at the bottom.
+
+---
+
+_DeepFunGen aims to make ONNX-based functional signal generation and inference pipelines simple, efficient, and easy to visualize._
+
+
+# DeepFunGen Quick Start
+
 DeepFunGen은 ONNX 포맷의 간섭도 예측 모델을 사용해 비디오를 큐에 넣고 백그라운드로 추론 및 후처리를 수행하는 Windows용 python 앱입니다. 아래 단계만 따라 하면 바로 실행하고 결과를 확인할 수 있습니다.
 
 ## 준비물
