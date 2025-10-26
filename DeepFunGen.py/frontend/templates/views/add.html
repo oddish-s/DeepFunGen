@@ -1,0 +1,84 @@
+﻿<div class="pane">
+    <header class="pane__header">
+        <div>
+            <h2 class="pane__title" data-i18n="add.title">Add Files</h2>
+            <p class="pane__subtitle text-muted" data-i18n="add.subtitle">Stage videos, choose processing options, and enqueue jobs.</p>
+        </div>
+        <div class="pane__header-actions">
+            <label for="model-select" class="label" data-i18n="add.model_label">Model</label>
+            <select class="select" id="model-select"></select>
+        </div>
+    </header>
+    <div class="pane__body">
+        <div class="dropzone" id="drop-zone">
+            <div class="dropzone__message" data-i18n="add.drop_message">Drop videos here</div>
+            <div class="dropzone__buttons">
+                <button class="button" id="btn-browse-files" data-i18n="add.browse_files">Browse Files</button>
+            </div>
+        </div>
+        <div class="pane__content">
+            <section class="options">
+                <header class="section-header">
+                    <h3 class="section-title" data-i18n="add.options_title">Processing Options</h3>
+                </header>
+                <div class="options__grid">
+                    <label class="field">
+                        <span class="field__label" data-i18n="queue.opt_smooth">Smooth Window</span>
+                        <input class="input" id="queue-opt-smooth" type="number" min="1" step="1" value="3">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="queue.opt_prominence">Prominence Ratio</span>
+                        <input class="input" id="queue-opt-prominence" type="number" min="0" step="0.01" value="0.1">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="add.opt_min_prominence">Min Prominence</span>
+                        <input class="input" id="queue-opt-min-prominence" type="number" min="0" step="0.01" value="0.0">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="add.opt_max_slope">Max Slope</span>
+                        <input class="input" id="queue-opt-max-slope" type="number" min="0" step="0.1" value="10">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="add.opt_boost_slope">Boost Slope</span>
+                        <input class="input" id="queue-opt-boost-slope" type="number" min="0" step="0.1" value="7">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="add.opt_min_slope">Min Slope</span>
+                        <input class="input" id="queue-opt-min-slope" type="number" min="0" step="0.1" value="2">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="queue.opt_merge">Merge Threshold (ms)</span>
+                        <input class="input" id="queue-opt-merge" type="number" min="0" step="1" value="120">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="add.opt_central_dev">Central Deviation Threshold</span>
+                        <input class="input" id="queue-opt-central-dev" type="number" min="0" step="0.01" value="0.03">
+                    </label>
+                    <label class="field field--inline">
+                        <input class="checkbox" id="queue-opt-fft-denoise" type="checkbox" checked>
+                        <span class="field__label" data-i18n="add.opt_fft_denoise">FFT Denoise</span>
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="add.opt_fft_frames">FFT Frames / Component</span>
+                        <input class="input" id="queue-opt-fft-frames" type="number" min="1" step="1" value="10">
+                    </label>
+                    <label class="field">
+                        <span class="field__label" data-i18n="add.opt_fft_window">FFT Window Frames</span>
+                        <input class="input" id="queue-opt-fft-window" type="number" min="1" step="1" placeholder="Auto">
+                    </label>
+                </div>
+            </section>
+            <section class="staging">
+                <header class="section-header">
+                    <h3 class="section-title" data-i18n="add.staged_title">Staged Items</h3>
+                </header>
+                <div class="staging__cta">
+                    <button class="button button--primary staging__submit" id="btn-add-to-queue" data-i18n="queue.enqueue">Add to Queue</button>
+                </div>
+                <div id="staged-items" class="staging__list">
+                    <div class="staging__empty text-muted" data-i18n="queue.no_staged">No files staged.</div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

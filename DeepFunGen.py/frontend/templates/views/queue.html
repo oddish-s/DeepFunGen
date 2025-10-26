@@ -1,0 +1,31 @@
+﻿<div class="pane">
+    <header class="pane__header">
+        <div>
+            <h2 class="pane__title" data-i18n="queue.active_title">Processing Queue</h2>
+            <p class="pane__subtitle text-muted" data-i18n="queue.subtitle">Track queued, running, and completed jobs.</p>
+        </div>
+        <div class="pane__header-actions">
+            <button class="button button--ghost" id="btn-refresh-queue" data-i18n="queue.refresh">Refresh</button>
+            <button class="button button--ghost" id="btn-clear-finished" data-i18n="queue.clear_finished">Clear Finished</button>
+        </div>
+    </header>
+    <div class="pane__body">
+        <table class="table" id="queue-table">
+            <thead>
+                <tr>
+                    <th data-i18n="queue.table.video">Video</th>
+                    <th data-i18n="queue.table.status">Status</th>
+                    <th data-i18n="queue.table.progress">Progress</th>
+                    <th data-i18n="queue.table.model">Model</th>
+                    <th data-i18n="queue.table.options">Options</th>
+                    <th data-i18n="queue.table.actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="text-muted">
+                    <td colspan="6" data-i18n="queue.empty">Queue is empty.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
