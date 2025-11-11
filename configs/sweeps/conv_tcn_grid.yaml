@@ -1,0 +1,26 @@
+# Focused grid for conv_tcn presets. Two options per key, total 32 combos.
+# Covers optimizer strength, temporal encoder capacity, head depth, and label scaling.
+optimizer_config.lr:
+  - 5.0e-06
+  - 1.0e-05
+optimizer_config.weight_decay:
+  - 5.0e-05
+  - 1.5e-04
+model_config.sequence_encoder.hidden_dim:
+  - 256
+  - 320
+model_config.sequence_encoder.dropout:
+  - 0.20
+  - 0.40
+model_config.head.layers:
+  - [192, 96]
+  - [256, 128]
+training_config.normalization:
+  - [0.0, 6.0]
+  - [0.0, 10.0]
+model_config.frame_encoder.channels:
+  - [48, 96, 144, 192]
+  - [64, 128, 192, 256]
+model_config.sequence_encoder.num_layers:
+  - 4
+  - 6

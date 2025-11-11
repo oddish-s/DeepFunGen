@@ -1,0 +1,110 @@
+mlflow:
+  experiment: custom_test
+model_config:
+  name: sequence_regressor
+  sequence_length: 10
+  summary: full
+  frame_encoder:
+    type: conv
+    embed_dim: 256
+    channels: [48, 96, 144, 192]
+  sequence_encoder:
+    type: tcn
+    hidden_dim: 320
+    num_layers: 6
+    kernel_size: 5
+    dropout: 0.1
+    dilation_base: 2
+  head:
+    layers:
+    - 256
+    - 128
+    dropout: 0.1
+optimizer_config:
+  name: adamw
+  lr: 0.00005
+  weight_decay: 5.0e-05
+training_config:
+  batch_size: 12
+  num_epochs: 300
+  samples_per_epoch: 4000
+  val_samples_per_epoch: 2000
+  train_split: 0.85
+  scale_factor: 20.0
+  normalization: [0.0, 1.0]
+  scheduler_config:
+    scheduler_type: cosine
+    t_max: 300
+  early_stopping:
+    early_stop_patience: 100
+  loss_config:
+    use_huber_loss: true
+    huber_delta: 0.2
+  checkpoint_dir: models
+  device: cuda
+  amp: true
+  grad_accum_steps: 1
+  clip_grad_norm: 0.75
+  use_validation: true
+  seed: 2345
+  checkpoint_interval: 5
+  plot_interval: 10
+data_config:
+  video_folders:
+  - ./data/1
+  - ./data/2
+  - ./data/4
+  - ./data/5
+  - ./data/6
+  - ./data/7
+  - ./data/8
+  - ./data/9
+  - ./data/10
+  - ./data/11
+  - ./data/12
+  - ./data/13
+  - ./data/14
+  - ./data/15
+  - ./data/16
+  - ./data/17
+  - ./data/18
+  - ./data/19
+  - ./data/20
+  - ./data/21
+  - ./data/22
+  - ./data/23
+  - ./data/24
+  - ./data/25
+  - ./data/26
+  - ./data/27
+  - ./data/28
+  - ./data/29
+  - ./data/30
+  - ./data/31
+  - ./data/32
+  - ./data/33
+  - ./data/34
+  - ./data/35
+  - ./data/36
+  - ./data/37
+  - ./data/38
+  - ./data/39
+  - ./data/40
+  - ./data/41
+  target_size:
+  - 224
+  - 224
+  aspect_ratio_bounds: [0.75, 1.3333]
+  sequence_length: 10
+  sequence_targets: true
+  prediction_offset: 0
+  split_mode: random_chunk
+  safety_gap: 30
+  horizontal_flip: true
+  flip_probability: 0.5
+  color_jitter: true
+  random_affine: true
+  random_resized_crop: true
+postprocess_config:
+  fft_denoise: true
+  fft_frames_per_component: 10

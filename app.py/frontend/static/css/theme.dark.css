@@ -1,0 +1,42 @@
+﻿body[data-theme="dark"] {
+    --bg-900: #0f1117;
+    --bg-800: #141826;
+    --surface-900: #181d2c;
+    --surface-800: #1f2536;
+    --surface-700: #273043;
+    --border-color: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(91, 140, 255, 0.35);
+    --text-100: #f4f7ff;
+    --text-200: #c5cee0;
+    --accent-500: #5b8cff;
+    --accent-600: #4f7af0;
+    --danger-500: #ff5b7c;
+    --scroll-thumb: rgba(91, 140, 255, 0.45);
+    --scroll-track: rgba(255, 255, 255, 0.06);
+    --app-background: radial-gradient(circle at 20% 20%, rgba(91, 140, 255, 0.08), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(255, 91, 124, 0.06), transparent 45%),
+        var(--bg-900);
+    --sidebar-bg: linear-gradient(180deg, rgba(24, 30, 48, 0.95), rgba(16, 19, 31, 0.98));
+    --main-overlay: rgba(12, 15, 24, 0.65);
+    --nav-hover-bg: rgba(91, 140, 255, 0.14);
+    --nav-active-bg: linear-gradient(135deg, rgba(91, 140, 255, 0.35), rgba(91, 140, 255, 0.12));
+    --nav-active-border: rgba(91, 140, 255, 0.35);
+    --badge-bg: rgba(91, 140, 255, 0.25);
+    --dropzone-border: rgba(91, 140, 255, 0.35);
+    --dropzone-bg: rgba(45, 64, 110, 0.18);
+    --dropzone-hover-border: rgba(91, 140, 255, 0.8);
+    --dropzone-hover-bg: rgba(91, 140, 255, 0.16);
+    --button-shadow: 0 6px 18px rgba(91, 140, 255, 0.25);
+    --button-ghost-bg: rgba(255, 255, 255, 0.08);
+    --button-ghost-border: rgba(255, 255, 255, 0.08);
+    --button-ghost-hover: rgba(255, 255, 255, 0.12);
+    --checkbox-border: rgba(255, 255, 255, 0.2);
+    --table-divider: rgba(255, 255, 255, 0.06);
+    --table-hover: rgba(91, 140, 255, 0.08);
+    --status-bar-bg: rgba(17, 20, 32, 0.85);
+    --toast-error-border: rgba(255, 91, 124, 0.45);
+    --toast-success-border: rgba(91, 140, 255, 0.45);
+    --button-secondary-bg: rgba(255, 255, 255, 0.06);
+    --button-secondary-border: rgba(255, 255, 255, 0.12);
+    --button-secondary-hover: rgba(255, 255, 255, 0.1);
+}

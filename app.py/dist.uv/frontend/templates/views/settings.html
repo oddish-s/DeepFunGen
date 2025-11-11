@@ -1,0 +1,39 @@
+﻿<div class="card">
+    <h2 data-i18n="settings.title">Settings</h2>
+    <div class="flex flex--col gap-md mt-md">
+        <section>
+            <h3 data-i18n="settings.appearance">Appearance</h3>
+            <div class="flex gap-sm mt-sm">
+                <button class="button button--secondary" data-theme-value="dark" data-i18n="settings.dark">Dark</button>
+                <button class="button button--secondary" data-theme-value="light" data-i18n="settings.light">Light</button>
+            </div>
+        </section>
+        <section>
+            <h3 data-i18n="settings.language">Language</h3>
+            <div class="flex gap-sm mt-sm">
+                <button class="button button--secondary" data-lang-value="en" data-i18n="settings.english">English</button>
+                <button class="button button--secondary" data-lang-value="ko" data-i18n="settings.korean">Korean</button>
+            </div>
+        </section>
+        <section>
+            <h3 data-i18n="settings.updates">Updates</h3>
+            <div class="settings__update">
+                <div class="text-muted">
+                    <span data-i18n="settings.current_version">Current version</span>
+                    <strong id="settings-current-version">-</strong>
+                </div>
+                <div class="settings__update-actions">
+                    <button class="button button--secondary" id="settings-check-updates" data-i18n="settings.check_updates">Check for Updates</button>
+                    <div class="text-muted small settings__status settings__status--update" id="settings-update-status"></div>
+                </div>
+            </div>
+        </section>
+        <div class="settings__footer">
+            <span class="text-muted small" data-i18n="settings.autosave_hint">Changes are saved automatically.</span>
+            <span class="text-muted small settings__status" id="settings-status"></span>
+        </div>
+    </div>
+</div>
+
+
+

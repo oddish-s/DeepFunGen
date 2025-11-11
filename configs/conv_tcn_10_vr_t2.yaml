@@ -1,0 +1,89 @@
+mlflow:
+  experiment: custom_test
+model_config:
+  name: sequence_regressor
+  sequence_length: 10
+  summary: full
+  frame_encoder:
+    type: conv
+    embed_dim: 256
+    channels: [48, 96, 144, 192]
+  sequence_encoder:
+    type: tcn
+    hidden_dim: 320
+    num_layers: 6
+    kernel_size: 5
+    dropout: 0.1
+    dilation_base: 2
+  head:
+    layers:
+    - 256
+    - 128
+    dropout: 0.1
+optimizer_config:
+  name: adamw
+  lr: 0.00005
+  weight_decay: 5.0e-05
+training_config:
+  batch_size: 12
+  num_epochs: 300
+  samples_per_epoch: 4000
+  val_samples_per_epoch: 2000
+  train_split: 0.85
+  scale_factor: 20.0
+  normalization: [0.0, 1.0]
+  scheduler_config:
+    scheduler_type: cosine
+    t_max: 300
+  early_stopping:
+    early_stop_patience: 100
+  loss_config:
+    use_huber_loss: true
+    huber_delta: 0.2
+  checkpoint_dir: models
+  device: cuda
+  amp: true
+  grad_accum_steps: 1
+  clip_grad_norm: 0.75
+  use_validation: true
+  seed: 2345
+  checkpoint_interval: 5
+  plot_interval: 10
+data_config:
+  video_folders:
+  - ./data_vr/1
+  - ./data_vr/2
+  - ./data_vr/3
+  - ./data_vr/4
+  - ./data_vr/5
+  - ./data_vr/6
+  - ./data_vr/7
+  - ./data_vr/8
+  - ./data_vr/9
+  - ./data_vr/10
+  - ./data_vr/11
+  - ./data_vr/12
+  target_size:
+  - 320
+  - 320
+  aspect_ratio_bounds: [0.75, 1.3333]
+  sequence_length: 10
+  sequence_targets: true
+  prediction_offset: 0
+  vr_video: true
+  split_mode: random_chunk
+  safety_gap: 30
+  horizontal_flip: true
+  flip_probability: 0.5
+  color_jitter: true
+  random_affine: true
+  random_resized_crop: true
+  pose_features:
+    enabled: false
+    model_path: ./yolo11m-pose.pt
+    top_k: 2
+    pose_channels: 2
+    heatmap_sigma: 4.0
+  postprocess_config:
+    fft_denoise: true
+    fft_frames_per_component: 10

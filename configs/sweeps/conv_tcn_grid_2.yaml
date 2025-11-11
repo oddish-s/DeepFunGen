@@ -1,0 +1,15 @@
+optimizer_config.lr:
+  - 5.0e-05
+  - 7.5e-05
+training_config.scheduler_config.t_max:
+  - 100
+  - 150
+training_config.loss_config.huber_delta:
+  - 0.2
+  - 0.3
+training_config.loss_config.correlation_weight:
+  - 0.0
+  - 0.15
+model_config.sequence_encoder.dropout:
+  - 0.1
+  - 0.2
